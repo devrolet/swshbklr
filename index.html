@@ -10,6 +10,37 @@
     <button id="startStream">Start Broadcasting</button>
     <audio id="audioPlayer" controls autoplay></audio>
 
-    
+    <script>
+        let peerConnection;
+        const audioElement = document.getElementById('audioPlayer');
+        const startStream = document.getElementById('startStream');
+
+        // TODO: CREATE CONNECTION WITH ICESERVERS
+
+        const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+        async function startBroadcast() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            peerConnection = new RTCPeerConnection(config);
+            stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+            peerConnection.onicecandidate = event => {
+                if(event.candidate) {
+                    console.log("ICE Candidate", event.candidate);
+                }
+            };
+
+            peerConnection.ontrack = event => {
+                audioElement.srcObject = event.streams[0];
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            console.log('Offer Created: ', offer);
+        }
+
+        startStream.addEventListener('click', startBroadcast);
+    </script>
 </body>
 </html>
